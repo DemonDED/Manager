@@ -2,11 +2,14 @@
   <div id="table-component">
     <div class="tableUser">
       <button v-on:click="statusModal = true">Добавить</button>
-      <table>
+      <table class="table_sort">
+        <thead>
         <tr>
-          <th style="cursor:pointer;" >Имя</th>
-          <th style="cursor:pointer;" >Номер</th>
+          <th style="cursor:pointer;" @click="sortTable">Имя</th>
+          <th style="cursor:pointer;" @click="sortTable">Номер</th>
         </tr>
+        </thead>
+        <tbody>
         <tr v-for="item in dataLocalStorage" v-bind:key="item.name" >
           <td>{{item.name}}
               <table>
@@ -18,6 +21,7 @@
           </td>
           <td>{{item.phone}}</td>
         </tr>
+        </tbody>
       </table>
     </div>
     <div class="addUser">
@@ -56,6 +60,24 @@ export default {
         }
       }
       this.dataLocalStorage.push(dataFormAddUser)
+    },
+    sortTable () {
+      const getSort = ({ target }) => {
+        const order = (target.dataset.order = -(target.dataset.order || -1));
+        const index = [...target.parentNode.cells].indexOf(target);
+        const collator = new Intl.Collator(['en', 'ru'], { numeric: true });
+        const comparator = (index, order) => (a, b) => order * collator.compare(
+            a.children[index].innerHTML,
+            b.children[index].innerHTML
+        );
+        
+        for(const tBody of target.closest('table').tBodies)
+            tBody.append(...[...tBody.rows].sort(comparator(index, order)));
+
+        for(const cell of target.parentNode.cells)
+            cell.classList.toggle('sorted', cell === target);
+    };
+    document.querySelectorAll('.table_sort').forEach(tableTH => tableTH.addEventListener('click', () => getSort(event)));
     }
   },
   components: {
